@@ -1,0 +1,189 @@
+From 0f896ae959de9cafbd9c29dc39ee12a18807441e Mon Sep 17 00:00:00 2001
+From: gafsi <amene.gafsi@epfl.ch>
+Date: Sat, 7 Oct 2023 21:02:10 +0200
+Subject: [PATCH] This is my work
+
+---
+ src/main/scala/find/find.scala | 140 +++++++++++++++++++--------------
+ 1 file changed, 83 insertions(+), 57 deletions(-)
+
+diff --git a/src/main/scala/find/find.scala b/src/main/scala/find/find.scala
+index dae8e13..83f1642 100644
+--- a/src/main/scala/find/find.scala
++++ b/src/main/scala/find/find.scala
+@@ -1,89 +1,115 @@
+ package find
+ 
+-
+-def findAllAndPrint(entry: cs214.Entry): Boolean =
+-  println(entry.path())
+-
+-  if entry.isDirectory() && entry.hasChildren() then
+-    findAllAndPrint(entry.firstChild())
+-  if entry.hasNextSibling() then
+-    findAllAndPrint(entry.nextSibling())
+-
+-  true
+-
+-def findByNameAndPrint(entry: cs214.Entry, name: String): Boolean =
+-  val thisFound =
+-    entry.name() == name
+-      && { println(entry.path()); true }
++def findAndPrint(entry : cs214.Entry, f:(cs214.Entry) => Boolean): Boolean = 
++  
++  val thisFound = f(entry) && { println(entry.path()); true }   
+ 
+   val childrenFound =
+     entry.isDirectory()
+       && entry.hasChildren()
+-      && findByNameAndPrint(entry.firstChild(), name)
++      && findAndPrint(entry.firstChild(), f)
+ 
+   val nextSiblingsFound =
+     entry.hasNextSibling()
+-      && findByNameAndPrint(entry.nextSibling(), name)
++      && findAndPrint(entry.nextSibling(), f)
+ 
+   thisFound || childrenFound || nextSiblingsFound
+ 
++
++def findAllAndPrint(entry: cs214.Entry): Boolean =
++
++  findAndPrint(entry, _ => true)
++
++ // println(entry.path())
++  //if entry.isDirectory() && entry.hasChildren() then
++   // findAllAndPrint(entry.firstChild())
++  //if entry.hasNextSibling() then
++   // findAllAndPrint(entry.nextSibling())
++
++  //true
++
++def findByNameAndPrint(entry: cs214.Entry, name: String): Boolean =
++  findAndPrint(entry, (entry) => entry.name() == name)
++
++//  val thisFound =
++ //   entry.name() == name
++  //    && { println(entry.path()); true }
++
++  //val childrenFound =
++//    entry.isDirectory()
++    //  && entry.hasChildren()
++      //&& findByNameAndPrint(entry.firstChild(), name)
++
++  //val nextSiblingsFound =
++    //entry.hasNextSibling()
++    //  && findByNameAndPrint(entry.nextSibling(), name)
++
++  //thisFound || childrenFound || nextSiblingsFound
++
+ def findBySizeEqAndPrint(entry: cs214.Entry, size: Long): Boolean =
+-  val thisFound =
+-    !entry.isDirectory()
+-      && entry.size() == size
+-      && { println(entry.path()); true }
++  findAndPrint(entry, (entry) => (!entry.isDirectory()) && (entry.size() == size))
+ 
+-  val childrenFound =
+-    entry.isDirectory()
+-      && entry.hasChildren()
+-      && findBySizeEqAndPrint(entry.firstChild(), size)
++//  val thisFound =
++  //  !entry.isDirectory()
++    //  && entry.size() == size
++      //&& { println(entry.path()); true }
+ 
+-  val nextSiblingsFound =
+-    entry.hasNextSibling()
+-      && findBySizeEqAndPrint(entry.nextSibling(), size)
++  //val childrenFound =
++//    entry.isDirectory()
++    //  && entry.hasChildren()
++      //&& findBySizeEqAndPrint(entry.firstChild(), size)
+ 
+-  thisFound || childrenFound || nextSiblingsFound
++  //val nextSiblingsFound =
++    //entry.hasNextSibling()
++    //  && findBySizeEqAndPrint(entry.nextSibling(), size)
++
++  //thisFound || childrenFound || nextSiblingsFound
+ 
+ def findBySizeGeAndPrint(entry: cs214.Entry, minSize: Long): Boolean =
+-  val thisFound =
+-    !entry.isDirectory()
+-      && entry.size() >= minSize
+-      && { println(entry.path()); true }
++  findAndPrint(entry, (entry) => (!entry.isDirectory()) && (entry.size() >= minSize))
+ 
+-  val childrenFound =
+-    entry.isDirectory()
+-      && entry.hasChildren()
+-      && findBySizeGeAndPrint(entry.firstChild(), minSize)
++//  val thisFound =
++ //   !entry.isDirectory()
++  //    && entry.size() >= minSize
++   //   && { println(entry.path()); true }
+ 
+-  val nextSiblingsFound =
+-    entry.hasNextSibling()
+-      && findBySizeGeAndPrint(entry.nextSibling(), minSize)
++ // val childrenFound =
++  //  entry.isDirectory()
++   //   && entry.hasChildren()
++    //  && findBySizeGeAndPrint(entry.firstChild(), minSize)
+ 
+-  thisFound || childrenFound || nextSiblingsFound
++  //val nextSiblingsFound =
++    //entry.hasNextSibling()
++      //&& findBySizeGeAndPrint(entry.nextSibling(), minSize)
++
++  //thisFound || childrenFound || nextSiblingsFound
+ 
+ def findEmptyAndPrint(entry: cs214.Entry): Boolean =
+-  val isEmpty =
+-    if entry.isDirectory() then
+-      !entry.hasChildren()
+-    else
+-      entry.size() == 0
++  findAndPrint(entry, (entry) => ((entry.isDirectory()) && (!entry.hasChildren())) || 
++                                 ((!entry.isDirectory()) && (entry.size() == 0)))
+ 
+-  val thisFound =
+-    isEmpty && { println(entry.path()); true }
++ // val isEmpty =
++  //  if entry.isDirectory() then
++   //   !entry.hasChildren()
++    //else
++//      entry.size() == 0
+ 
+-  val childrenFound =
+-    entry.isDirectory()
+-      && entry.hasChildren()
+-      && findEmptyAndPrint(entry.firstChild())
++  //val thisFound =
++    //isEmpty && { println(entry.path()); true }
+ 
+-  val nextSiblingsFound =
+-    entry.hasNextSibling()
+-      && findEmptyAndPrint(entry.nextSibling())
++  //val childrenFound =
++    //entry.isDirectory()
++      //&& entry.hasChildren()
++      //&& findEmptyAndPrint(entry.firstChild())
+ 
+-  thisFound || childrenFound || nextSiblingsFound
++  //val nextSiblingsFound =
++    //entry.hasNextSibling()
++      //&& findEmptyAndPrint(entry.nextSibling())
++
++ // thisFound || childrenFound || nextSiblingsFound
+ 
+ def howManyHoursISpentOnThisLab(): Double =
+-  0.0 // in hours, so put 3.5 here if you spent 3 hours and a half on the lab
++  5 // in hours, so put 3.5 here if you spent 3 hours and a half on the lab
+ 
+ def findFirstByNameAndPrint(entry: cs214.Entry, name: String): Boolean =
+   val thisFound =
+-- 
+2.34.1.windows.1
+

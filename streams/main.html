@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Bloxorz</title>
+  </head>
+  <body>
+    <!-- Include Scala.js compiled code -->
+    <canvas id="glcanvas" width="1260" height="720"></canvas>
+    <!-- <script src="https://requirejs.org/docs/release/2.3.6/minified/require.js"></script> -->
+
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-dispatch@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-quadtree@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-timer@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-force@3"></script>
+    <script src="graph.js"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
+      integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
+      crossorigin="anonymous"
+      ></script>
+      
+    <br>
+    <button id="animate">Animate</button>
+    <button id="toggle-layout">Layout</button>
+    <div id="network" style="width:1000px; height:1000px"></div>
+      
+    <script type="text/javascript" src="./web/target/scala-3.3.1/web-fastopt/main.js"></script>
+  </body>
+</html>

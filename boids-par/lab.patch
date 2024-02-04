@@ -1,0 +1,131 @@
+From a6b3865f47ae1bca2cfb6905dad5f07eab97908c Mon Sep 17 00:00:00 2001
+From: gafsi <amene.gafsi@epfl.ch>
+Date: Mon, 30 Oct 2023 19:20:43 +0100
+Subject: [PATCH] work
+
+---
+ src/main/scala/boids/BoidLogic.scala          | 34 +++++++++----------
+ src/main/scala/boids/World.scala              |  6 ++--
+ .../scala/howManyHoursISpentOnThisLab.scala   |  2 +-
+ 3 files changed, 21 insertions(+), 21 deletions(-)
+
+diff --git a/src/main/scala/boids/BoidLogic.scala b/src/main/scala/boids/BoidLogic.scala
+index 4b4ed9b..d9cb604 100644
+--- a/src/main/scala/boids/BoidLogic.scala
++++ b/src/main/scala/boids/BoidLogic.scala
+@@ -3,36 +3,36 @@ import cs214.{Vector2, BoidSequence}
+ import scala.collection.parallel.CollectionConverters.* // access to .par methods
+ import boids.conversions.NumericVectors.given
+ 
+-def boidsWithinRadius(thisBoid: Boid, boids: BoidSequence, radius: Float): BoidSequence =
+-  boids.filter(b =>
++def boidsWithinRadius(thisBoid: Boid, boids: Vector[Boid], radius: Float): Vector[Boid] =
++  boids.par.filter(b =>
+     b != thisBoid &&
+       b.position.distanceTo(thisBoid.position) < radius
+-  )
++  ).seq
+ 
+-def avoidanceForce(thisBoid: Boid, boidsWithinAvoidanceRadius: BoidSequence): cs214.Vector2 =
+-  boidsWithinAvoidanceRadius
+-    .mapVector2(b => thisBoid.position - b.position)
++def avoidanceForce(thisBoid: Boid, boidsWithinAvoidanceRadius: Vector[Boid]): cs214.Vector2 =
++  boidsWithinAvoidanceRadius.par
++    .map(b => thisBoid.position - b.position)
+     .filter(_.norm > 0)
+     .map(diff => diff / (diff.norm * diff.norm))
+     .sum
+ 
+-def cohesionForce(thisBoid: Boid, boidsWithinPerceptionRadius: BoidSequence): cs214.Vector2 =
++def cohesionForce(thisBoid: Boid, boidsWithinPerceptionRadius: Vector[Boid]): cs214.Vector2 =
+   if boidsWithinPerceptionRadius.isEmpty then
+     Vector2.Zero
+   else
+-    boidsWithinPerceptionRadius.mapVector2(_.position).sum
++    boidsWithinPerceptionRadius.par.map(_.position).sum
+       / boidsWithinPerceptionRadius.length.toFloat
+       - thisBoid.position
+ 
+-def alignmentForce(thisBoid: Boid, boidsWithinPerceptionRadius: BoidSequence): cs214.Vector2 =
++def alignmentForce(thisBoid: Boid, boidsWithinPerceptionRadius: Vector[Boid]): cs214.Vector2 =
+   if boidsWithinPerceptionRadius.isEmpty then
+     Vector2.Zero
+   else
+-    boidsWithinPerceptionRadius.mapVector2(_.velocity).sum
++    boidsWithinPerceptionRadius.par.map(_.velocity).sum
+       / boidsWithinPerceptionRadius.length.toFloat
+       - thisBoid.velocity
+ 
+-def containmentForce(thisBoid: Boid, allBoids: BoidSequence, width: Int, height: Int): cs214.Vector2 =
++def containmentForce(thisBoid: Boid, allBoids: Vector[Boid], width: Int, height: Int): cs214.Vector2 =
+   val horizontalForce =
+     if thisBoid.position.x < 0 then Vector2.UnitRight
+     else if thisBoid.position.x > width then Vector2.UnitLeft
+@@ -43,7 +43,7 @@ def containmentForce(thisBoid: Boid, allBoids: BoidSequence, width: Int, height:
+     else Vector2.Zero
+   horizontalForce + verticalForce
+ 
+-def totalForce(thisBoid: Boid, allBoids: BoidSequence, physics: Physics): Vector2 =
++def totalForce(thisBoid: Boid, allBoids: Vector[Boid], physics: Physics): Vector2 =
+   val withinPerceptionRadius = boidsWithinRadius(thisBoid, allBoids, physics.perceptionRadius)
+   val cohere = cohesionForce(thisBoid, withinPerceptionRadius)
+   val align = alignmentForce(thisBoid, withinPerceptionRadius)
+@@ -65,7 +65,7 @@ def clampVelocity(velocity: cs214.Vector2, minimumSpeed: Float, maximumSpeed: Fl
+   else
+     velocity
+ 
+-def tickBoid(thisBoid: Boid, allBoids: BoidSequence, physics: Physics): Boid =
++def tickBoid(thisBoid: Boid, allBoids: Vector[Boid], physics: Physics): Boid =
+   val acceleration = totalForce(thisBoid, allBoids, physics)
+   Boid(
+     thisBoid.position + thisBoid.velocity,
+@@ -76,10 +76,10 @@ def tickBoid(thisBoid: Boid, allBoids: BoidSequence, physics: Physics): Boid =
+     )
+   )
+ 
+-def tickWorld(allBoids: BoidSequence, physics: Physics): BoidSequence =
+-  allBoids.mapBoid(boid => tickBoid(boid, allBoids, physics))
++def tickWorld(allBoids: Vector[Boid], physics: Physics): Vector[Boid] =
++  allBoids.par.map(boid => tickBoid(boid, allBoids, physics)).seq
+ 
+ // Port this function to use Vector[Boid], but otherwise leave it untouched
+ // (don't add parallelism): it serves as a baseline in the benchmarks.
+-def tickWorldSequential(allBoids: BoidSequence, physics: Physics): BoidSequence =
+-  allBoids.mapBoid(boid => tickBoid(boid, allBoids, physics))
++def tickWorldSequential(allBoids: Vector[Boid], physics: Physics): Vector[Boid] =
++  allBoids.map(boid => tickBoid(boid, allBoids, physics))
+diff --git a/src/main/scala/boids/World.scala b/src/main/scala/boids/World.scala
+index 25fb3f8..e5c7fef 100644
+--- a/src/main/scala/boids/World.scala
++++ b/src/main/scala/boids/World.scala
+@@ -5,7 +5,7 @@ import scala.util.Random
+ import boids.conversions.FluidBoidVecs.given
+ 
+ class World(val physics: Physics):
+-  def tick(boids: BoidSequence): BoidSequence = tickWorld(boids, physics)
++  def tick(boids: Vector[Boid]): Vector[Boid] = tickWorld(boids, physics)
+ 
+ object World:
+   def createRandomBoid(physics: Physics): Boid =
+@@ -16,8 +16,8 @@ object World:
+     val initialVelocity = Vector2.UnitUp.rotate(rotation) * initialSpeed
+     Boid(position = Vector2(x, y), velocity = initialVelocity)
+ 
+-  def createRandom(numBoids: Int, physics: Physics): BoidSequence =
+-    (0 until numBoids).foldLeft[BoidSequence](BoidNil()) { (seq, _) =>
++  def createRandom(numBoids: Int, physics: Physics): Vector[Boid] =
++    (0 until numBoids).foldLeft[Vector[Boid]](BoidNil()) { (seq, _) =>
+       BoidCons(createRandomBoid(physics), seq)
+     }
+ 
+diff --git a/src/main/scala/howManyHoursISpentOnThisLab.scala b/src/main/scala/howManyHoursISpentOnThisLab.scala
+index 50d7ba5..b8e1bcc 100644
+--- a/src/main/scala/howManyHoursISpentOnThisLab.scala
++++ b/src/main/scala/howManyHoursISpentOnThisLab.scala
+@@ -1,2 +1,2 @@
+ def howManyHoursISpentOnThisLab(): Double =
+-  0.0 // in hours, so put 3.5 here if you spent 3 hours and a half on the lab
++  0.5 // in hours, so put 3.5 here if you spent 3 hours and a half on the lab
+-- 
+2.34.1.windows.1
+
